@@ -1506,6 +1506,15 @@ spec:
                       the original request method while forwarding the request to
                       the authentication server.
                     type: boolean
+                  timeout:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: |-
+                      Timeout defines the maximum duration allowed for a request to the authentication server.
+                      It is parsed as a Go duration string (e.g. "30s", "1m").
+                      If zero, no timeout is applied.
+                    x-kubernetes-int-or-string: true
                   tls:
                     description: TLS defines the configuration used to secure the
                       connection to the authentication server.

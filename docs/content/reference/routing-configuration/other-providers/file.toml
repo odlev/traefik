@@ -227,6 +227,7 @@
         preserveLocationHeader = true
         preserveRequestMethod = true
         authSigninURL = "foobar"
+        timeout = "42s"
         [http.middlewares.Middleware11.forwardAuth.tls]
           ca = "foobar"
           cert = "foobar"

@@ -259,6 +259,7 @@ http:
         preserveLocationHeader: true
         preserveRequestMethod: true
         authSigninURL: foobar
+        timeout: 42s
     Middleware12:
       grpcWeb:
         allowOrigins:
