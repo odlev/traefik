@@ -313,11 +313,16 @@ type ForwardAuth struct {
 	PreserveRequestMethod bool `json:"preserveRequestMethod,omitempty" toml:"preserveRequestMethod,omitempty" yaml:"preserveRequestMethod,omitempty" export:"true"`
 	// AuthSigninURL specifies the URL to redirect to when the authentication server returns 401 Unauthorized.
 	AuthSigninURL string `json:"authSigninURL,omitempty" toml:"authSigninURL,omitempty" yaml:"authSigninURL,omitempty" export:"true"`
+	// Timeout defines the maximum duration allowed for a request to the authentication server.
+	// It is parsed as a Go duration string (e.g. "30s", "1m").
+	// If zero, no timeout is applied.
+	Timeout ptypes.Duration `json:"timeout,omitempty" toml:"timeout,omitempty" yaml:"timeout,omitempty" export:"true"`
 }
 
 func (f *ForwardAuth) SetDefaults() {
 	defaultMaxBodySize := ForwardAuthDefaultMaxBodySize
 	f.MaxBodySize = &defaultMaxBodySize
+	f.Timeout = ptypes.Duration(30 * time.Second)
 }
 
 // +k8s:deepcopy-gen=true

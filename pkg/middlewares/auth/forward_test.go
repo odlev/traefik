@@ -15,6 +15,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	ptypes "github.com/traefik/paerser/types"
 	"github.com/traefik/traefik/v3/pkg/config/dynamic"
 	"github.com/traefik/traefik/v3/pkg/middlewares/observability"
 	"github.com/traefik/traefik/v3/pkg/observability/tracing"
@@ -1100,6 +1101,64 @@ func TestForwardAuthAuthSigninURL(t *testing.T) {
 			} else {
 				assert.Empty(t, res.Header.Get("Location"))
 			}
+		})
+	}
+}
+
+func TestForwardAuthTimeout(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		timeout        time.Duration
+		serverDelay    time.Duration
+		expectedStatus int
+	}{
+		{
+			desc:           "custom timeout expires before server responds",
+			timeout:        50 * time.Millisecond,
+			serverDelay:    500 * time.Millisecond,
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			desc:           "custom timeout allows server to respond",
+			timeout:        5 * time.Second,
+			serverDelay:    0,
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
+			authServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if test.serverDelay > 0 {
+					time.Sleep(test.serverDelay)
+				}
+				w.WriteHeader(http.StatusOK)
+			}))
+			t.Cleanup(authServer.Close)
+
+			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			})
+
+			auth := dynamic.ForwardAuth{
+				Address: authServer.URL,
+			}
+			auth.SetDefaults()
+			auth.Timeout = ptypes.Duration(test.timeout)
+
+			middleware, err := NewForward(t.Context(), next, auth, "authTest")
+			require.NoError(t, err)
+
+			ts := httptest.NewServer(middleware)
+			t.Cleanup(ts.Close)
+
+			req := testhelpers.MustNewRequest(http.MethodGet, ts.URL, nil)
+			res, err := http.DefaultClient.Do(req)
+			require.NoError(t, err)
+
+			assert.Equal(t, test.expectedStatus, res.StatusCode)
 		})
 	}
 }

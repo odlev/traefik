@@ -215,6 +215,10 @@ type ForwardAuth struct {
 	PreserveRequestMethod bool `json:"preserveRequestMethod,omitempty"`
 	// AuthSigninURL specifies the URL to redirect to when the authentication server returns 401 Unauthorized.
 	AuthSigninURL string `json:"authSigninURL,omitempty"`
+	// Timeout defines the maximum duration allowed for a request to the authentication server.
+	// It is parsed as a Go duration string (e.g. "30s", "1m").
+	// If zero, no timeout is applied.
+	Timeout *intstr.IntOrString `json:"timeout,omitempty"`
 }
 
 // +k8s:deepcopy-gen=true
